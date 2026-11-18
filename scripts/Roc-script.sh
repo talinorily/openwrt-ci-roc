@@ -347,6 +347,18 @@ fi
 # =============================================================================
 
 # ---------------------------------------------------------------------------
+# 0) 【前置】统一创建所有需要的目录
+#    上游脚本开头有 `set -Eeuo pipefail`，任何一次重定向到不存在的目录都会
+#    立即终止整个构建。v1 构建失败正是因为在写 files/etc/uci-defaults/ 前
+#    没有创建该目录（报错：99-ax6600-defaults: No such file or directory）。
+# ---------------------------------------------------------------------------
+mkdir -p files/usr/sbin \
+         files/etc/uci-defaults \
+         files/etc/init.d \
+         files/lib/firmware/ath11k/IPQ6018/hw1.0 \
+         files/lib/firmware/ath11k/QCN9074/hw1.0
+
+# ---------------------------------------------------------------------------
 # 1) 默认管理 IP / 主机名（脚本原逻辑已改成 192.168.2.1，如需其他网段在此调整）
 #    保持与 CI release 说明一致：192.168.2.1 / root / password
 # ---------------------------------------------------------------------------
@@ -436,7 +448,11 @@ chmod +x files/etc/uci-defaults/99-ax6600-defaults
 #    因此改为：固件内置一个安装脚本，刷机后 SSH 执行即可从 istore 官方
 #    源安装（文章验证过的方式），固件只需自带 curl + ca-certificates。
 # ---------------------------------------------------------------------------
-mkdir -p files/usr/sbin
+# 统一创建所有需要的目录（缺一个就会因 set -e 直接退出，这是 v1 构建失败的根因）
+mkdir -p files/usr/sbin \
+         files/etc/uci-defaults \
+         files/etc/init.d
+
 cat > files/usr/sbin/install-istore <<'EOF'
 #!/bin/sh
 # 京东云 AX6600 一键安装 iStore（来源 istore.linkease.com）
